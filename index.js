@@ -9,7 +9,7 @@ const corsOptions = {
         'http://localhost:5174',
         `${process.env.HTTP_URL}`,
         `${process.env.OPTIONAL_URL}`,
-       
+
     ],
     credentials: true,
     optionSuccessStatus: 200,
@@ -35,7 +35,15 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         // await client.connect();
 
+        const queryCollection = client.db("ChoiceChampion").collection("query");
+       
 
+        app.post("/query",async (req, res) => {
+            const query = req.body;
+            console.log("new query", query);
+            const result = await queryCollection.insertOne(query);
+            res.send(result)
+        })
         // Send a ping to confirm a successful connection
         // await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
