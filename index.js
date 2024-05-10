@@ -37,10 +37,15 @@ async function run() {
 
         const queryCollection = client.db("ChoiceChampion").collection("query");
        
+        // get query data 
+        app.get("/query",async(req,res)=>{
+            const result =  await queryCollection.find().toArray();
+            res.send(result)
+        })
 
         app.post("/query",async (req, res) => {
             const query = req.body;
-            console.log("new query", query);
+            // console.log("new query", query);
             const result = await queryCollection.insertOne(query);
             res.send(result)
         })
