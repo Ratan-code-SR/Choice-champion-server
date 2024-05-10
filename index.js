@@ -7,16 +7,16 @@ const corsOptions = {
     origin: [
         'http://localhost:5173',
         'http://localhost:5174',
-        'https://choicechampion-d3308.web.app',
-        'choicechampion-d3308.firebaseapp.com',
+        `${process.env.HTTP_URL}`,
+        `${process.env.OPTIONAL_URL}`,
+       
     ],
     credentials: true,
     optionSuccessStatus: 200,
 }
+
 app.use(cors(corsOptions))
 app.use(express.json())
-
-
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ntqulhj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
