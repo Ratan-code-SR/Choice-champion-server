@@ -9,6 +9,7 @@ const corsOptions = {
         'http://localhost:5174',
         `${process.env.HTTP_URL}`,
         `${process.env.OPTIONAL_URL}`,
+        'https://choice-champion-server.vercel.app', // Add this line
 
     ],
     credentials: true,
@@ -18,7 +19,7 @@ const corsOptions = {
 app.use(cors(corsOptions))
 app.use(express.json())
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ntqulhj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -36,18 +37,53 @@ async function run() {
         // await client.connect();
 
         const queryCollection = client.db("ChoiceChampion").collection("query");
-       
+        const recommendCollection = client.db("ChoiceChampion").collection("recommend");
+
         // get query data 
-        app.get("/query",async(req,res)=>{
-            const result =  await queryCollection.find().toArray();
+        app.get("/query", async (req, res) => {
+            const result = await queryCollection.find().toArray();
             res.send(result)
         })
 
-        app.post("/query",async (req, res) => {
+        app.get("/recommend",async(req,res)=>{
+            const result = await recommendCollection.find().toArray();
+            res.send(result)
+        })
+
+        app.get("/query/:email", async (req, res) => {
+            const email = req.params.email;
+            const query = { User_Email: email };
+            const result = await queryCollection.find(query).toArray();
+            res.send(result)
+        })
+        app.get("/query/id/:id", async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await queryCollection.findOne(query);
+            res.send(result)
+        })
+
+        app.post("/query", async (req, res) => {
             const query = req.body;
             // console.log("new query", query);
             const result = await queryCollection.insertOne(query);
             res.send(result)
+        })
+
+        app.post("/recommend", async (req, res) => {
+            const query = req.body;
+            console.log("new query", query);
+            const result = await recommendCollection.insertOne(query);
+            res.send(result)
+        })
+
+        
+        app.delete("/query/:id", async (req, res) => {
+                const id = req.params.id;
+                console.log("please delete from database", id);
+                const query = { _id: new ObjectId(id) };
+                const result = await queryCollection.deleteOne(query);
+                res.send(result)
         })
         // Send a ping to confirm a successful connection
         // await client.db("admin").command({ ping: 1 });
