@@ -66,6 +66,15 @@ async function run() {
             const result = await recommendCollection.find(query).toArray();
             res.send(result)
         })
+
+        // delete recommend
+        app.delete("/recommend/:id", async (req, res) => {
+            const id = req.params.id;
+            // console.log("please delete from database", id);
+            const query = { _id: new ObjectId(id) };
+            const result = await recommendCollection.deleteOne(query);
+            res.send(result)
+        })
         // get query by email
         app.get("/query/:email", async (req, res) => {
             const email = req.params.email;
@@ -87,6 +96,31 @@ async function run() {
             res.send(result)
         })
 
+        // update query
+        app.put("/query/:id", async (req, res) => {
+            const id = req.params.id;
+            const updateQuery = req.body;
+            console.log(id, updateQuery);
+            const filter = { _id: new ObjectId(id)}
+            const options = { upsert: true }
+            const updateQueryDoc = {
+                $set: {
+                    Product_Image: updateQuery.Product_Image,
+                    Query_Title: updateQuery.Query_Title,
+                    Product_Name: updateQuery.Product_Name,
+                    Brand_Name: updateQuery.Brand_Name,
+                    Boycotting_Reason: updateQuery.Boycotting_Reason,
+                    User_Name: updateQuery.User_Name,
+                    User_Image: updateQuery.User_Image,
+                    User_Email: updateQuery.User_Email,
+                    recommendationCount: updateQuery.recommendationCount,
+                    Current_Date: updateQuery.Current_Date,
+                    Current_Time: updateQuery.Current_Time
+                }
+            }
+            const result = await queryCollection.updateOne(filter, updateQueryDoc, options)
+            res.send(result)
+        })
         // post recommend
         app.post("/recommend", async (req, res) => {
             const query = req.body;
@@ -94,7 +128,6 @@ async function run() {
             const result = await recommendCollection.insertOne(query);
             res.send(result)
         })
-
 
         app.delete("/query/:id", async (req, res) => {
             const id = req.params.id;
