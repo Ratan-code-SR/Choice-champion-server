@@ -45,11 +45,28 @@ async function run() {
             res.send(result)
         })
 
-        app.get("/recommend",async(req,res)=>{
+        // get recommended data 
+        app.get("/recommend", async (req, res) => {
             const result = await recommendCollection.find().toArray();
             res.send(result)
         })
 
+        // get recommendation by id
+        app.get("/recommend/query_id/:query_id", async (req, res) => {
+            const id = req.params.query_id;
+            const query = { query_id: id };
+            const result = await recommendCollection.find(query).toArray();
+            res.send(result)
+        })
+
+        // get recommendation by email
+        app.get("/recommend/email/:recommend_userEmail", async (req, res) => {
+            const email = req.params.recommend_userEmail;
+            const query = { recommend_userEmail: email };
+            const result = await recommendCollection.find(query).toArray();
+            res.send(result)
+        })
+        // get query by email
         app.get("/query/:email", async (req, res) => {
             const email = req.params.email;
             const query = { User_Email: email };
@@ -70,6 +87,7 @@ async function run() {
             res.send(result)
         })
 
+        // post recommend
         app.post("/recommend", async (req, res) => {
             const query = req.body;
             console.log("new query", query);
@@ -77,13 +95,13 @@ async function run() {
             res.send(result)
         })
 
-        
+
         app.delete("/query/:id", async (req, res) => {
-                const id = req.params.id;
-                console.log("please delete from database", id);
-                const query = { _id: new ObjectId(id) };
-                const result = await queryCollection.deleteOne(query);
-                res.send(result)
+            const id = req.params.id;
+            console.log("please delete from database", id);
+            const query = { _id: new ObjectId(id) };
+            const result = await queryCollection.deleteOne(query);
+            res.send(result)
         })
         // Send a ping to confirm a successful connection
         // await client.db("admin").command({ ping: 1 });
