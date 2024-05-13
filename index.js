@@ -46,7 +46,7 @@ const verifyToken = (req, res, next) => {
     const token = req?.cookies?.token;
     // console.log('verified token -->',token);
     if (!token) {
-        return res.status(401).res.send({ message: "unauthorized" })
+        return res.status(401).send({ message: "unauthorized" })
     }
 
     jwt.verify(token, process.env.TOKEN_SECRET_API, (error, decoded) => {
@@ -69,7 +69,7 @@ async function run() {
         app.post('/jwt', logger, (req, res) => {
             const user = req.body;
             console.log('user token', user);
-            const token = jwt.sign(user, process.env.TOKEN_SECRET_API, { expiresIn: '10h' })
+            const token = jwt.sign(user, process.env.TOKEN_SECRET_API, { expiresIn: '1h' })
             res.cookie('token', token, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
@@ -90,11 +90,15 @@ async function run() {
         // get query data 
         app.get("/query", logger, async (req, res) => {
             // console.log('cookie',req.cookies);
-          
+
             const result = await queryCollection.find().toArray();
             res.send(result)
         })
 
+        app.get("/queryCount", async (req, res) => {
+            const count = await queryCollection.estimatedDocumentCount()
+            res.send({count})
+        })
         // get recommended data 
         app.get("/recommend", async (req, res) => {
             const result = await recommendCollection.find().toArray();
@@ -129,7 +133,7 @@ async function run() {
         app.get("/query/:email", logger, verifyToken, async (req, res) => {
             // console.log('set cookies email-->',req.cookies);
             // console.log(req.params.email);
-            if(req.user.email !== req.params.email){
+            if (req.user.email !== req.params.email) {
                 return res.status(403).send({ message: "not access" })
             }
             const email = req.params.email;
@@ -144,7 +148,7 @@ async function run() {
             res.send(result)
         })
 
-        app.post("/query", async (req, res) => {
+        app.post("/query", logger, verifyToken, async (req, res) => {
             const query = req.body;
             // console.log("new query", query);
             const result = await queryCollection.insertOne(query);
