@@ -37,12 +37,28 @@ const client = new MongoClient(uri, {
 
 // my middleware
 
-const logger = (res,req,next)=>{
-    console.log("log: information -->",req.method,res.url);
-    next()
+const logger = (req, res, next) => {
+    console.log("log: information -->", req.method, req.url);
+    next();
 }
 
+const verifyToken = (req, res, next) => {
+    const token = req?.cookies?.token;
+    // console.log('verified token -->',token);
+    if (!token) {
+        return res.status(401).res.send({ message: "unauthorized" })
+    }
 
+    jwt.verify(token, process.env.TOKEN_SECRET_API, (error, decoded) => {
+        if (error) {
+            res.status(401).send({ message: "unauthorized" })
+        }
+        req.user = decoded
+
+        next()
+    })
+
+}
 async function run() {
     try {
 
@@ -50,30 +66,31 @@ async function run() {
         const recommendCollection = client.db("ChoiceChampion").collection("recommend");
         // auth related api
         // jwt
-        app.post('/jwt',logger, (req, res) => {
+        app.post('/jwt', logger, (req, res) => {
             const user = req.body;
             console.log('user token', user);
             const token = jwt.sign(user, process.env.TOKEN_SECRET_API, { expiresIn: '10h' })
             res.cookie('token', token, {
                 httpOnly: true,
-                secure: true,
-                sameSite: 'none'
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
             })
             res.send({ success: true })
         })
 
         app.post('/logout', (req, res) => {
             const user = req.body;
-            console.log('logout user',user);
-            res.clearCookie('token',{maxAge:0}).send({success:true})
+            console.log('logout user', user);
+            res.clearCookie('token', { maxAge: 0 }).send({ success: true })
 
         })
 
 
         // query related api
         // get query data 
-        app.get("/query", async (req, res) => {
+        app.get("/query", logger, async (req, res) => {
             // console.log('cookie',req.cookies);
+          
             const result = await queryCollection.find().toArray();
             res.send(result)
         })
@@ -109,9 +126,12 @@ async function run() {
             res.send(result)
         })
         // get query by email
-        app.get("/query/:email",logger, async (req, res) => {
+        app.get("/query/:email", logger, verifyToken, async (req, res) => {
             // console.log('set cookies email-->',req.cookies);
             // console.log(req.params.email);
+            if(req.user.email !== req.params.email){
+                return res.status(403).send({ message: "not access" })
+            }
             const email = req.params.email;
             const query = { User_Email: email };
             const result = await queryCollection.find(query).toArray();
