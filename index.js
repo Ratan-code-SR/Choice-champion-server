@@ -88,16 +88,21 @@ async function run() {
 
         // query related api
         // get query data 
-        app.get("/query", logger, async (req, res) => {
+        app.get("/query", async (req, res) => {
             // console.log('cookie',req.cookies);
-
-            const result = await queryCollection.find().toArray();
+            console.log(req.query);
+            const page = parseInt(req.query.page);
+            const size = parseInt(req.query.size);
+            const result = await queryCollection.find()
+                .skip(page * size)
+                .limit(size)
+                .toArray();
             res.send(result)
         })
 
         app.get("/queryCount", async (req, res) => {
             const count = await queryCollection.estimatedDocumentCount()
-            res.send({count})
+            res.send({ count })
         })
         // get recommended data 
         app.get("/recommend", async (req, res) => {
@@ -148,11 +153,12 @@ async function run() {
             res.send(result)
         })
 
-        app.post("/query", logger, verifyToken, async (req, res) => {
+        app.post("/query", async (req, res) => {
             const query = req.body;
             // console.log("new query", query);
             const result = await queryCollection.insertOne(query);
             res.send(result)
+
         })
 
         // update query
@@ -183,8 +189,15 @@ async function run() {
         // post recommend
         app.post("/recommend", async (req, res) => {
             const query = req.body;
-            console.log("new query", query);
+            const id = query.query_id;
+           console.log('idd-->',id);
             const result = await recommendCollection.insertOne(query);
+            const updateDoc = {
+                $inc: { recommendationCount: 1 },
+            }
+            const recommendQuery = { _id: new ObjectId(id) }
+            const updateRecommendCount = await queryCollection.updateOne(recommendQuery, updateDoc)
+            console.log(updateRecommendCount)
             res.send(result)
         })
 
