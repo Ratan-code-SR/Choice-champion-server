@@ -129,11 +129,21 @@ async function run() {
         // delete recommend
         app.delete("/recommend/:id", async (req, res) => {
             const id = req.params.id;
-            // console.log("please delete from database", id);
-            const query = { _id: new ObjectId(id) };
-            const result = await recommendCollection.deleteOne(query);
-            res.send(result)
+            const recommendation = await recommendCollection.findOne({ _id: new ObjectId(id) });
+            const queryId = recommendation.query_id;
+
+            // Delete the recommendation
+            const result = await recommendCollection.deleteOne({ _id: new ObjectId(id) });
+
+            const updateDoc = {
+                $inc: { recommendationCount: -1 },
+            };
+            const recommendQuery = { _id: new ObjectId(queryId) };
+            const updateRecommendCount = await queryCollection.updateOne(recommendQuery, updateDoc);
+            console.log(updateRecommendCount);
+            res.send(result);
         })
+
         // get query by email
         app.get("/query/:email", logger, verifyToken, async (req, res) => {
             // console.log('set cookies email-->',req.cookies);
@@ -190,7 +200,7 @@ async function run() {
         app.post("/recommend", async (req, res) => {
             const query = req.body;
             const id = query.query_id;
-           console.log('idd-->',id);
+            console.log('idd-->', id);
             const result = await recommendCollection.insertOne(query);
             const updateDoc = {
                 $inc: { recommendationCount: 1 },
