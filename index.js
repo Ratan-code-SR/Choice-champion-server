@@ -35,22 +35,45 @@ const client = new MongoClient(uri, {
     }
 });
 
+// my middleware
+
+const logger = (res,req,next)=>{
+    console.log("log: information -->",req.method,res.url);
+    next()
+}
+
+
 async function run() {
     try {
 
         const queryCollection = client.db("ChoiceChampion").collection("query");
         const recommendCollection = client.db("ChoiceChampion").collection("recommend");
-
+        // auth related api
         // jwt
-        app.get('/jwt', (req, res) => {
+        app.post('/jwt',logger, (req, res) => {
             const user = req.body;
-            const token = jwt.sign(user,process.env.TOKEN_SECRET_API,{
-                expiresIn: '10h'
+            console.log('user token', user);
+            const token = jwt.sign(user, process.env.TOKEN_SECRET_API, { expiresIn: '10h' })
+            res.cookie('token', token, {
+                httpOnly: true,
+                secure: true,
+                sameSite: 'none'
             })
-            res.send({token})
+            res.send({ success: true })
         })
+
+        app.post('/logout', (req, res) => {
+            const user = req.body;
+            console.log('logout user',user);
+            res.clearCookie('token',{maxAge:0}).send({success:true})
+
+        })
+
+
+        // query related api
         // get query data 
         app.get("/query", async (req, res) => {
+            // console.log('cookie',req.cookies);
             const result = await queryCollection.find().toArray();
             res.send(result)
         })
@@ -86,7 +109,9 @@ async function run() {
             res.send(result)
         })
         // get query by email
-        app.get("/query/:email", async (req, res) => {
+        app.get("/query/:email",logger, async (req, res) => {
+            // console.log('set cookies email-->',req.cookies);
+            // console.log(req.params.email);
             const email = req.params.email;
             const query = { User_Email: email };
             const result = await queryCollection.find(query).toArray();
