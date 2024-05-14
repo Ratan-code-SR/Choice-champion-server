@@ -64,6 +64,7 @@ async function run() {
 
         const queryCollection = client.db("ChoiceChampion").collection("query");
         const recommendCollection = client.db("ChoiceChampion").collection("recommend");
+        const reviewCollection = client.db("ChoiceChampion").collection("reviews");
         // auth related api
         // jwt
         app.post('/jwt', logger, (req, res) => {
@@ -87,21 +88,32 @@ async function run() {
 
 
         // query related api
+        
         // get query data 
         app.get("/query", async (req, res) => {
             // console.log('cookie',req.cookies);
-            console.log(req.query);
-            const page = parseInt(req.query.page);
+            const result = await queryCollection.find().toArray();
+            res.send(result)
+        })
+
+        app.get("/all-queries", async (req, res) => {
+            // console.log(req.query);
+            const page = parseInt(req.query.page) - 1;
             const size = parseInt(req.query.size);
-            const result = await queryCollection.find()
-                .skip(page * size)
+            const search = req.query.search;
+            let query = {
+                Product_Name: { $regex: search, $options: 'i' },
+            }
+            //   console.log(search);
+            const result = await queryCollection.find(query)
+                .skip(page > 0 ? (page - 1) * size : 0)
                 .limit(size)
                 .toArray();
             res.send(result)
         })
 
         app.get("/queryCount", async (req, res) => {
-            const count = await queryCollection.estimatedDocumentCount()
+            const count = await queryCollection.countDocuments()
             res.send({ count })
         })
         // get recommended data 
@@ -109,6 +121,13 @@ async function run() {
             const result = await recommendCollection.find().toArray();
             res.send(result)
         })
+
+        // get review
+        app.get("/reviews", async (req, res) => {
+            const result = await reviewCollection.find().toArray();
+            res.send(result)
+        })
+
 
         // get recommendation by id
         app.get("/recommend/query_id/:query_id", async (req, res) => {
