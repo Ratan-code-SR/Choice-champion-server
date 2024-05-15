@@ -69,7 +69,7 @@ async function run() {
         // jwt
         app.post('/jwt', logger, (req, res) => {
             const user = req.body;
-            console.log('user token', user);
+            // console.log('user token', user);
             const token = jwt.sign(user, process.env.TOKEN_SECRET_API, { expiresIn: '1h' })
             res.cookie('token', token, {
                 httpOnly: true,
@@ -88,7 +88,7 @@ async function run() {
 
 
         // query related api
-        
+
         // get query data 
         app.get("/query", async (req, res) => {
             // console.log('cookie',req.cookies);
@@ -96,9 +96,9 @@ async function run() {
             res.send(result)
         })
 
-        app.get("/all-queries", async (req, res) => {
+        app.get("/all-queries",logger, verifyToken, async (req, res) => {
             // console.log(req.query);
-            const page = parseInt(req.query.page) - 1;
+            const page = parseInt(req.query.page);
             const size = parseInt(req.query.size);
             const search = req.query.search;
             let query = {
@@ -106,7 +106,8 @@ async function run() {
             }
             //   console.log(search);
             const result = await queryCollection.find(query)
-                .skip(page > 0 ? (page - 1) * size : 0)
+                // .skip(page > 0 ? (page - 1) * size : 0)
+                .skip(page * size )
                 .limit(size)
                 .toArray();
             res.send(result)
@@ -175,7 +176,7 @@ async function run() {
             const result = await queryCollection.find(query).toArray();
             res.send(result)
         })
-        app.get("/query/id/:id", async (req, res) => {
+        app.get("/query/id/:id", logger, verifyToken, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await queryCollection.findOne(query);
@@ -191,10 +192,10 @@ async function run() {
         })
 
         // update query
-        app.put("/query/:id", async (req, res) => {
+        app.put("/query/:id",  async (req, res) => {
             const id = req.params.id;
             const updateQuery = req.body;
-            console.log(id, updateQuery);
+            // console.log(id, updateQuery);
             const filter = { _id: new ObjectId(id) }
             const options = { upsert: true }
             const updateQueryDoc = {
