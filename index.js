@@ -96,7 +96,7 @@ async function run() {
             res.send(result)
         })
 
-        app.get("/all-queries",logger, verifyToken, async (req, res) => {
+        app.get("/all-queries", async (req, res) => {
             // console.log(req.query);
             const page = parseInt(req.query.page);
             const size = parseInt(req.query.size);
