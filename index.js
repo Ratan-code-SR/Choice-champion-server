@@ -8,11 +8,12 @@ const port = process.env.PORT || 5000
 const app = express()
 const corsOptions = {
     origin: [
-        'http://localhost:5173',
-        'http://localhost:5174',
+        // 'http://localhost:5173',
+        // 'http://localhost:5174',
         `${process.env.HTTP_URL}`,
         `${process.env.OPTIONAL_URL}`,
         `${process.env.NETLIFY_URL}`,
+        'https://choicechampion.netlify.app',
         'https://choice-champion-server.vercel.app',
 
     ],
