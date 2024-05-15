@@ -12,6 +12,7 @@ const corsOptions = {
         'http://localhost:5174',
         `${process.env.HTTP_URL}`,
         `${process.env.OPTIONAL_URL}`,
+        `${process.env.NETLIFY_URL}`,
         'https://choice-champion-server.vercel.app',
 
     ],
@@ -107,7 +108,7 @@ async function run() {
             //   console.log(search);
             const result = await queryCollection.find(query)
                 // .skip(page > 0 ? (page - 1) * size : 0)
-                .skip(page * size )
+                .skip(page * size)
                 .limit(size)
                 .toArray();
             res.send(result)
@@ -192,7 +193,7 @@ async function run() {
         })
 
         // update query
-        app.put("/query/:id",  async (req, res) => {
+        app.put("/query/:id", async (req, res) => {
             const id = req.params.id;
             const updateQuery = req.body;
             // console.log(id, updateQuery);
